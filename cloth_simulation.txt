@@ -1,0 +1,223 @@
+ 
+int cols=10;
+int rows=10;
+Bob[] bobs = new Bob[cols*rows];
+Bob[][] bob = new Bob[rows][cols];
+Spring[] springs = new Spring[cols*(rows-1)+rows*(cols-1)];
+  
+void setup() {
+ 
+  size(640,360,P3D);
+  background(255);
+  
+//connecting the bobs vertically with springs  
+  int d=0;
+  int r=0; 
+  float w=30;
+  float x = -320;
+  for (int i = 0; i < cols; i++) {
+    float y = -180;
+    for (int j = 0; j <rows; j++) {
+      bobs[d] =  new Bob(x, y, 0);
+      if(d>0){
+      if((d)%rows!=0){ 
+      springs[r] = new Spring(bobs[d], bobs[d-1],w);
+      r=r+1;} }
+      d=d+1;
+      y=y+w;
+      
+    }
+    x = x + w;
+  }
+  
+ 
+ //connecting the bobs horizontally with springs
+  
+  d=0;
+  for (int i = 0; i <cols; i++) {
+ 
+    for (int j = 0; j <(rows); j++) {
+       
+     
+      if(i<(cols-1)){ 
+      springs[r] = new Spring(bobs[d], bobs[d+rows],w);
+      r=r+1;}
+      
+      d=d+1;
+      
+      
+    }
+    
+  }
+  
+ 
+ int t=0;
+  for (int j = 0; j < rows; j++) {
+   
+    for (int i = 0; i < cols; i++) {
+       
+      bob[i][j]=bobs[t];
+ 
+      t=t+1;
+    }
+    
+  }
+  
+ 
+   
+} 
+  
+float a=0;
+ 
+float d=.7;
+ 
+void draw() {
+  background(251);
+  translate(width/2, height/2);
+  a=a+d;
+ 
+ 
+  PVector force1 = new PVector(35+a,-51-5,0);
+  PVector force2 = new PVector(-35+a,-51-5,0);
+ 
+  PVector force3 = new PVector(35+a,5,0);
+  PVector force4 = new PVector(-35+a,5,0);
+  
+  if(abs(a)>100){d=-d;}
+  
+  //applying periondic forrces at the 4 corner bobs
+  bobs[0].applyForce(force2);
+  bobs[cols*rows-rows].applyForce(force1); 
+  bobs[99].applyForce(force3); 
+  bobs[9].applyForce(force4); 
+ 
+  
+ 
+
+  for (Spring s : springs) {
+    s.update();
+	s.display();
+   
+  }
+
+  for (Bob b : bobs) {
+    b.update();
+    b.display();
+  }
+}
+
+ 
+class Bob { 
+  PVector position;
+  PVector velocity;
+  PVector acceleration;
+  float mass = 8;
+  
+   
+  float damping = 0.9;
+
+  
+  // Constructor
+  Bob(float x, float y,float z) {
+    position = new PVector(x,y,z);
+    velocity = new PVector();
+    acceleration = new PVector();
+ 
+  } 
+
+  // Standard Euler integration
+  void update() { 
+    PVector force = new PVector(0,1,0);    
+    applyForce(force);
+    
+    
+    
+    velocity.add(acceleration);
+    velocity.mult(damping);    
+    position.add(velocity);
+    acceleration.mult(0);
+     
+  }
+  
+  PVector fun(){
+    return position;}
+    
+  // Newton's law: F = M * A
+  void applyForce(PVector force) {
+    PVector f = force.get();
+    f.div(mass);
+    acceleration.add(f);
+    
+    
+  }
+
+
+   
+  
+ void display() {
+    noStroke();
+    fill(25);
+    pushMatrix();
+    translate(position.x,position.y,position.z);
+    sphere(.1);
+    popMatrix();
+  }
+ 
+  
+  }
+  
+  
+  
+class Spring { 
+
+ 
+  PVector anchor;
+
+  // Rest length and spring constant
+  float len;
+  float k = 1;
+  
+  Bob a;
+  Bob b;
+
+  // Constructor
+  Spring(Bob a_, Bob b_, float l) {
+    a = a_;
+    b = b_;
+    len = l;
+  } 
+
+  // Calculate spring force
+  void update() {
+    // Vector pointing from anchor to bob position
+    PVector force = PVector.sub(a.position, b.position);
+    // What is distance
+    float d = force.mag();
+    // Stretch is difference between current distance and rest length
+    float stretch = d - len;
+
+    // Calculate force according to Hooke's Law
+    // F = k * stretch
+    force.normalize();
+    force.mult(-1 * k * stretch);
+    a.applyForce(force);
+    force.mult(-1);
+    b.applyForce(force);
+  }
+
+
+  void display() {
+    strokeWeight(2);
+    stroke(0);
+    line(a.position.x, a.position.y,a.position.z, b.position.x, b.position.y,b.position.z);
+  }
+}  
+  
+
+
+
+
+
+
+
+ 
